@@ -23,7 +23,7 @@ def get_password_area_riservata() -> str:
             return pwd.strip()
     except Exception:
         pass
-    return "torino2026"
+    return ""
 
 
 ETICHETTE_DEFAULT = {
