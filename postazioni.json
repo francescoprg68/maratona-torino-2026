@@ -1,0 +1,68 @@
+[
+  {
+    "id": "MIKE 49",
+    "nome": "Drosso 145",
+    "immagine": "strada del Drosso 145.jpg",
+    "immagini": [
+      "strada del Drosso 145.jpg"
+    ],
+    "codice_radio": "2 volontari",
+    "personale": "",
+    "commenti": "Compiti paragrafo 5. Centro strada. 2\nTRANSENNE\nProtezione percorso e sorveglianza transenne.\nStrada del Drosso aperta direzione Beinasco.\nCorsa in contromano.\nFiat Avio + strada agli orti."
+  },
+  {
+    "id": "MIKE 50",
+    "nome": "DROSSO 165",
+    "immagine": "strada del Drosso 165.jpg",
+    "immagini": [
+      "strada del Drosso 165.jpg"
+    ],
+    "codice_radio": "3 volontari",
+    "personale": "",
+    "commenti": "Compiti paragrafo 5. 3 TRANSENNE.\nAccessi minori diversi.\nProtezione percorso e sorveglianza transenne.\nStrada del Drosso aperta direzione Beinasco.\nCorsa in contromano."
+  },
+  {
+    "id": "MIKE 51",
+    "nome": "Drosso / Negarville",
+    "immagine": "Drosso_Negarville.jpg",
+    "immagini": [
+      "Drosso_Negarville.jpg"
+    ],
+    "codice_radio": "2 volontari",
+    "personale": "",
+    "commenti": "Compiti paragrafo 5. Centro strada. 1\nTRANSENNA\nProtezione percorso e sorveglianza transenne.\nStrada del Drosso aperta direzione Beinasco.\nCorsa in contromano."
+  },
+  {
+    "id": "MIKE 52",
+    "nome": "Drosso int. 158",
+    "immagine": "strada del Drosso 158.jpg",
+    "immagini": [
+      "strada del Drosso 158.jpg"
+    ],
+    "codice_radio": "2 volontari",
+    "personale": "",
+    "commenti": "Compiti paragrafo 5. Centro strada. 1\nTRANSENNA\nProtezione percorso e sorveglianza transenne.\nStrada del Drosso aperta direzione Beinasco.\nCorsa in contromano"
+  },
+  {
+    "id": "MIKE 53",
+    "nome": "Drosso int. 164",
+    "immagine": "strada del Drosso 164.jpg",
+    "immagini": [
+      "strada del Drosso 164.jpg"
+    ],
+    "codice_radio": "2 volontari",
+    "personale": "",
+    "commenti": "Compiti paragrafo 5. Centro strada. 1\nTRANSENNA\nProtezione percorso e sorveglianza transenne.\nStrada del Drosso aperta direzione Beinasco.\nCorsa in contromano."
+  },
+  {
+    "id": "MIKE 54",
+    "nome": "Drosso int. 184",
+    "immagine": "strada del Drosso 184.jpg",
+    "immagini": [
+      "strada del Drosso 184.jpg"
+    ],
+    "codice_radio": "2 volontari",
+    "personale": "",
+    "commenti": "Compiti paragrafo 5. Centro strada. 1\nTRANSENNA\nProtezione percorso e sorveglianza transenne.\nStrada del Drosso aperta direzione Beinasco.\nCorsa in contromano."
+  }
+]

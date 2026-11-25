@@ -1,0 +1,13 @@
+{
+  "titolo_home": "Turin Marathon 2026 — Postazioni & Incroci",
+  "sottotitolo_home": "Consulta la mappa generale del percorso, le risorse della manifestazione e i dettagli delle postazioni.",
+  "expander_mappa": "Persorso su STRADA DEL DROSSO",
+  "expander_risorse": "Link & Immagini della Manifestazione",
+  "etichetta_ricerca": "Cerca incrocio, ID, radio o personale",
+  "titolo_postazioni": "Postazioni Attive",
+  "campo_id": "Codice Postazione",
+  "campo_nome": "Nome Incrocio",
+  "campo_radio": "personale richiesto",
+  "campo_personale": "Personale assegnato",
+  "campo_commenti": "Commenti"
+}
