@@ -317,6 +317,28 @@ def estrai_lista_personale(testo_personale: str) -> list[str]:
     return [p.strip() for p in parti if p and p.strip()]
 
 
+def chiave_ordinamento_postazione(postazione: dict):
+    """Ordina prima per codice (id) e poi per nome postazione, con numeri in ordine crescente."""
+    id_raw = str(postazione.get("id", "")).strip().lower()
+    nome_raw = str(postazione.get("nome", "")).strip().lower()
+    parti_id = [
+        int(p) if p.isdigit() else p
+        for p in re.split(r"(\d+)", id_raw)
+        if p
+    ]
+    parti_nome = [
+        int(p) if p.isdigit() else p
+        for p in re.split(r"(\d+)", nome_raw)
+        if p
+    ]
+    return (
+        0 if id_raw else 1,
+        parti_id,
+        0 if nome_raw else 1,
+        parti_nome,
+    )
+
+
 def mostra_immagine_espandibile(img_path: Path, caption: str, chiave_univoca: str, width_compatta: int = 200):
     if not img_path.exists():
         st.warning(f"Immagine non trovata: `{img_path.name}`")
@@ -454,21 +476,23 @@ if st.session_state.pagina == "home":
 
             if img_lista:
                 st.markdown("**Immagini della manifestazione**")
-                cols_r = st.columns(3)
-                for r_idx, r_img in enumerate(img_lista):
-                    col_r = cols_r[r_idx % 3]
-                    with col_r:
-                        with st.container(border=True):
-                            nome_r = r_img.get("file", "")
-                            titolo_r = r_img.get("titolo") or nome_r
-                            mostra_immagine_espandibile(
-                                img_path=IMG_DIR / nome_r,
-                                caption=titolo_r,
-                                chiave_univoca=f"risorsa_img_{r_idx}_{nome_r}",
-                                width_compatta=200,
-                            )
-                            if r_img.get("fonte_url"):
-                                st.caption(f"Fonte: {r_img['fonte_url']}")
+                for inizio_r in range(0, len(img_lista), 3):
+                    riga_r = img_lista[inizio_r : inizio_r + 3]
+                    cols_r = st.columns(3)
+                    for col_r_idx, r_img in enumerate(riga_r):
+                        r_idx = inizio_r + col_r_idx
+                        with cols_r[col_r_idx]:
+                            with st.container(border=True):
+                                nome_r = r_img.get("file", "")
+                                titolo_r = r_img.get("titolo") or nome_r
+                                mostra_immagine_espandibile(
+                                    img_path=IMG_DIR / nome_r,
+                                    caption=titolo_r,
+                                    chiave_univoca=f"risorsa_img_{r_idx}_{nome_r}",
+                                    width_compatta=200,
+                                )
+                                if r_img.get("fonte_url"):
+                                    st.caption(f"Fonte: {r_img['fonte_url']}")
 
     filtro = st.text_input(etichette["etichetta_ricerca"], "").strip().lower()
 
@@ -484,64 +508,72 @@ if st.session_state.pagina == "home":
     else:
         postazioni_filtrate = postazioni
 
-    st.subheader(f"{etichette['titolo_postazioni']} ({len(postazioni_filtrate)})")
+    postazioni_ordinate = sorted(postazioni_filtrate, key=chiave_ordinamento_postazione)
 
-    if not postazioni_filtrate:
+    st.subheader(f"{etichette['titolo_postazioni']} ({len(postazioni_ordinate)})")
+
+    if not postazioni_ordinate:
         st.info("Nessuna postazione presente. Accedi all'Area Riservata in alto a destra per inserirle.")
     else:
-        cols = st.columns(3)
-        for idx, p in enumerate(postazioni_filtrate):
-            col = cols[idx % 3]
-            with col:
-                with st.container(border=True):
-                    id_val = str(p.get("id", "")).strip()
-                    nome_val = str(p.get("nome", "")).strip()
-                    intestazione_card = f"{id_val} — {nome_val}" if id_val and nome_val else (id_val or nome_val)
+        for inizio in range(0, len(postazioni_ordinate), 3):
+            riga_postazioni = postazioni_ordinate[inizio : inizio + 3]
+            cols = st.columns(3)
+            for col_idx, p in enumerate(riga_postazioni):
+                idx = inizio + col_idx
+                with cols[col_idx]:
+                    with st.container(border=True):
+                        id_val = str(p.get("id", "")).strip()
+                        nome_val = str(p.get("nome", "")).strip()
+                        intestazione_card = (
+                            f"{id_val} — {nome_val}"
+                            if id_val and nome_val
+                            else (id_val or nome_val)
+                        )
 
-                    st.markdown(
-                        f'<div class="scheda-titolo">{intestazione_card}</div>',
-                        unsafe_allow_html=True,
-                    )
+                        st.markdown(
+                            f'<div class="scheda-titolo">{intestazione_card}</div>',
+                            unsafe_allow_html=True,
+                        )
 
-                    imgs = estrai_immagini(p)
-                    if imgs:
-                        for img_idx, img_nome in enumerate(imgs):
-                            img_path = IMG_DIR / img_nome
-                            mostra_immagine_espandibile(
-                                img_path=img_path,
-                                caption=img_nome,
-                                chiave_univoca=f"post_{idx}_{img_idx}_{img_nome}",
-                                width_compatta=200,
+                        imgs = estrai_immagini(p)
+                        if imgs:
+                            for img_idx, img_nome in enumerate(imgs):
+                                img_path = IMG_DIR / img_nome
+                                mostra_immagine_espandibile(
+                                    img_path=img_path,
+                                    caption=img_nome,
+                                    chiave_univoca=f"post_{idx}_{img_idx}_{img_nome}",
+                                    width_compatta=200,
+                                )
+                        else:
+                            st.caption("Nessuna foto associata.")
+
+                        radio_txt = p.get("codice_radio") or "-"
+                        commenti_txt = p.get("commenti") or "-"
+                        nomi_pers = estrai_lista_personale(str(p.get("personale", "")))
+
+                        st.markdown(
+                            f'<div class="scheda-riga"><strong>{etichette["campo_radio"]}:</strong> {radio_txt}</div>',
+                            unsafe_allow_html=True,
+                        )
+
+                        if nomi_pers:
+                            voci_li = "".join(f"<li>{nome}</li>" for nome in nomi_pers)
+                            st.markdown(
+                                f'<div class="scheda-riga"><strong>{etichette["campo_personale"]}:</strong></div>'
+                                f'<ul class="lista-personale">{voci_li}</ul>',
+                                unsafe_allow_html=True,
                             )
-                    else:
-                        st.caption("Nessuna foto associata.")
+                        else:
+                            st.markdown(
+                                f'<div class="scheda-riga"><strong>{etichette["campo_personale"]}:</strong> -</div>',
+                                unsafe_allow_html=True,
+                            )
 
-                    radio_txt = p.get("codice_radio") or "-"
-                    commenti_txt = p.get("commenti") or "-"
-                    nomi_pers = estrai_lista_personale(str(p.get("personale", "")))
-
-                    st.markdown(
-                        f'<div class="scheda-riga"><strong>{etichette["campo_radio"]}:</strong> {radio_txt}</div>',
-                        unsafe_allow_html=True,
-                    )
-
-                    if nomi_pers:
-                        voci_li = "".join(f"<li>{nome}</li>" for nome in nomi_pers)
                         st.markdown(
-                            f'<div class="scheda-riga"><strong>{etichette["campo_personale"]}:</strong></div>'
-                            f'<ul class="lista-personale">{voci_li}</ul>',
+                            f'<div class="scheda-riga"><strong>{etichette["campo_commenti"]}:</strong> {commenti_txt}</div>',
                             unsafe_allow_html=True,
                         )
-                    else:
-                        st.markdown(
-                            f'<div class="scheda-riga"><strong>{etichette["campo_personale"]}:</strong> -</div>',
-                            unsafe_allow_html=True,
-                        )
-
-                    st.markdown(
-                        f'<div class="scheda-riga"><strong>{etichette["campo_commenti"]}:</strong> {commenti_txt}</div>',
-                        unsafe_allow_html=True,
-                    )
 
 # ==============================================================================
 # PAGINA 2: AREA RISERVATA
