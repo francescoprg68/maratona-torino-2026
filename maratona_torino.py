@@ -52,10 +52,41 @@ st.markdown(
     /* Sfondo azzurrino tenue riposante per la lettura */
     [data-testid="stAppViewContainer"] {
         background: linear-gradient(180deg, #eaf4fb 0%, #dcebf7 100%) !important;
+        color: #111827 !important;
+    }
+
+    /* Forza colore scuro leggibile sui testi standard anche con tema scuro su cellulare/tablet */
+    [data-testid="stAppViewContainer"] h1,
+    [data-testid="stAppViewContainer"] h2,
+    [data-testid="stAppViewContainer"] h3,
+    [data-testid="stAppViewContainer"] h4,
+    [data-testid="stAppViewContainer"] p,
+    [data-testid="stAppViewContainer"] label,
+    [data-testid="stAppViewContainer"] .stMarkdown,
+    [data-testid="stAppViewContainer"] .stMarkdown p,
+    [data-testid="stAppViewContainer"] .stMarkdown li,
+    [data-testid="stAppViewContainer"] [data-testid="stCaptionContainer"],
+    [data-testid="stAppViewContainer"] [data-testid="stCaptionContainer"] *,
+    [data-testid="stAppViewContainer"] [data-testid="stExpander"] summary,
+    [data-testid="stAppViewContainer"] [data-testid="stExpander"] summary * {
+        color: #111827 !important;
+    }
+
+    /* Campi di testo e aree di testo leggibili su cellulare e tablet */
+    [data-testid="stAppViewContainer"] input,
+    [data-testid="stAppViewContainer"] textarea {
+        color: #111827 !important;
+        background-color: #ffffff !important;
+    }
+    [data-testid="stAppViewContainer"] input::placeholder,
+    [data-testid="stAppViewContainer"] textarea::placeholder {
+        color: #6b7280 !important;
+        opacity: 1 !important;
     }
 
     /* Pulsanti blu scuro a pillola (Torna alla Home / Logout / Area Riservata) */
-    div[data-testid="stButton"] > button[kind="primary"] {
+    div[data-testid="stButton"] > button[kind="primary"],
+    div[data-testid="stButton"] > button[kind="primary"] * {
         background-color: #142143 !important;
         color: #ffffff !important;
         border: 2px solid #3b1d36 !important;
