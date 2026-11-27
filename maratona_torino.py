@@ -26,6 +26,21 @@ def get_password_area_riservata() -> str:
     return ""
 
 
+FONT_OPZIONI = {
+    "Predefinito (Sistema)": "inherit",
+    "Sans-Serif pulito (Arial / Helvetica)": "Arial, Helvetica, sans-serif",
+    "Moderno leggibile (Verdana / Tahoma)": "Verdana, Geneva, sans-serif",
+    "Classico con grazie (Georgia / Times)": "Georgia, 'Times New Roman', serif",
+    "Monospazio tecnico (Courier / Consolas)": "'Courier New', Courier, monospace",
+}
+
+STILE_TESTO_OPZIONI = {
+    "Normale": ("normal", "400"),
+    "Grassetto": ("normal", "700"),
+    "Corsivo": ("italic", "400"),
+    "Grassetto + Corsivo": ("italic", "700"),
+}
+
 ETICHETTE_DEFAULT = {
     "titolo_home": "Turin Marathon 2026 — Postazioni & Incroci",
     "sottotitolo_home": "Consulta la mappa generale del percorso, le risorse della manifestazione e i dettagli delle postazioni.",
@@ -38,188 +53,28 @@ ETICHETTE_DEFAULT = {
     "campo_radio": "Codice radio",
     "campo_personale": "Personale assegnato",
     "campo_commenti": "Commenti",
+    # --- STILI SALVATI IN JSON ---
+    "stile_titolo_font": "Predefinito (Sistema)",
+    "stile_titolo_size": 32,
+    "stile_titolo_colore": "#111827",
+    "stile_titolo_peso": "Grassetto",
+    "stile_sottotitolo_font": "Predefinito (Sistema)",
+    "stile_sottotitolo_size": 18,
+    "stile_sottotitolo_colore": "#1e3a5f",
+    "stile_sottotitolo_peso": "Normale",
+    "stile_etichette_font": "Predefinito (Sistema)",
+    "stile_etichette_size": 16,
+    "stile_etichette_colore": "#111827",
+    "stile_etichette_peso": "Grassetto",
+    "stile_contenuti_font": "Predefinito (Sistema)",
+    "stile_contenuti_size": 15,
+    "stile_contenuti_colore": "#1f2937",
+    "stile_contenuti_peso": "Normale",
 }
 
 st.set_page_config(
     page_title="Turin Marathon 2026 - Gestione Postazioni",
     layout="wide",
-)
-
-# --- STILE CSS (SFONDO AZZURRINO TENUE + PULSANTI + SCHEDE COMPATTE + FOTO CELLULARE) ---
-st.markdown(
-    """
-    <style>
-    /* Sfondo azzurrino tenue riposante per la lettura */
-    [data-testid="stAppViewContainer"] {
-        background: linear-gradient(180deg, #eaf4fb 0%, #dcebf7 100%) !important;
-        color: #111827 !important;
-    }
-
-    /* Forza colore scuro leggibile sui testi standard anche con tema scuro su cellulare/tablet */
-    [data-testid="stAppViewContainer"] h1,
-    [data-testid="stAppViewContainer"] h2,
-    [data-testid="stAppViewContainer"] h3,
-    [data-testid="stAppViewContainer"] h4,
-    [data-testid="stAppViewContainer"] p,
-    [data-testid="stAppViewContainer"] label,
-    [data-testid="stAppViewContainer"] .stMarkdown,
-    [data-testid="stAppViewContainer"] .stMarkdown p,
-    [data-testid="stAppViewContainer"] .stMarkdown li,
-    [data-testid="stAppViewContainer"] [data-testid="stCaptionContainer"],
-    [data-testid="stAppViewContainer"] [data-testid="stCaptionContainer"] *,
-    [data-testid="stAppViewContainer"] [data-testid="stExpander"] summary,
-    [data-testid="stAppViewContainer"] [data-testid="stExpander"] summary * {
-        color: #111827 !important;
-    }
-
-    /* Campi di testo e aree di testo leggibili su cellulare e tablet */
-    [data-testid="stAppViewContainer"] input,
-    [data-testid="stAppViewContainer"] textarea {
-        color: #111827 !important;
-        background-color: #ffffff !important;
-    }
-    [data-testid="stAppViewContainer"] input::placeholder,
-    [data-testid="stAppViewContainer"] textarea::placeholder {
-        color: #6b7280 !important;
-        opacity: 1 !important;
-    }
-
-    /* Pulsanti blu scuro a pillola (Torna alla Home / Logout / Area Riservata) */
-    div[data-testid="stButton"] > button[kind="primary"],
-    div[data-testid="stButton"] > button[kind="primary"] * {
-        background-color: #142143 !important;
-        color: #ffffff !important;
-        border: 2px solid #3b1d36 !important;
-        border-radius: 50px !important;
-        padding: 0.5rem 1.4rem !important;
-        font-weight: 600 !important;
-        font-size: 0.98rem !important;
-        transition: all 0.2s ease-in-out;
-    }
-    div[data-testid="stButton"] > button[kind="primary"]:hover {
-        background-color: #1e3263 !important;
-        border-color: #5c2d54 !important;
-    }
-
-    /* Pulsante "Pubblica" bianco largo nei form */
-    div[data-testid="stFormSubmitButton"] > button[kind="primary"] {
-        background-color: #ffffff !important;
-        color: #1f2937 !important;
-        border: 1px solid #d1d5db !important;
-        border-radius: 8px !important;
-        padding: 0.5rem 1rem !important;
-        font-weight: 600 !important;
-        width: 100% !important;
-    }
-    div[data-testid="stFormSubmitButton"] > button[kind="primary"]:hover {
-        background-color: #f3f4f6 !important;
-        border-color: #9ca3af !important;
-    }
-
-    /* Riquadri schede (st.container(border=True)) */
-    div[data-testid="stVerticalBlockBorderWrapper"] {
-        max-width: 100% !important;
-        background-color: #f8fcff !important;
-    }
-    div[data-testid="stVerticalBlockBorderWrapper"] > div {
-        padding: 0.75rem 0.85rem !important;
-    }
-
-    /* Compatta la distanza tra gli elementi dentro i riquadri */
-    div[data-testid="stVerticalBlockBorderWrapper"] .element-container {
-        margin-bottom: 0.25rem !important;
-    }
-
-    /* Pulsante Espandi / Riduci immagine */
-    div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stButton"] > button {
-        padding: 0.3rem 0.75rem !important;
-        font-size: 0.85rem !important;
-        min-height: 0 !important;
-    }
-
-    /* Immagini grandi sulla Home per una lettura chiara già al primo sguardo */
-    div[data-testid="stImage"].img-compatta img {
-        width: 100% !important;
-        max-height: 290px !important;
-        object-fit: contain !important;
-        border-radius: 6px !important;
-    }
-
-    /* Immagini espanse per il massimo dettaglio */
-    div[data-testid="stImage"].img-espansa img {
-        width: 100% !important;
-        max-height: none !important;
-        object-fit: contain !important;
-        border-radius: 8px !important;
-    }
-
-    /* Piantina generale ampia e leggibile su cellulare e tablet */
-    div[data-testid="stImage"].mappa-compatta img {
-        width: 100% !important;
-        max-height: 360px !important;
-        object-fit: contain !important;
-        border-radius: 6px !important;
-    }
-
-    div[data-testid="stImage"].mappa-espansa img {
-        width: 100% !important;
-        max-height: none !important;
-        object-fit: contain !important;
-        border-radius: 8px !important;
-    }
-
-    /* Testo compatto nelle schede postazione */
-    .scheda-titolo {
-        font-size: 1.05rem;
-        font-weight: 700;
-        margin: 0 0 0.35rem 0;
-        line-height: 1.25;
-        color: #111827;
-    }
-    .scheda-riga {
-        font-size: 0.9rem;
-        line-height: 1.3;
-        margin: 0.22rem 0;
-        color: #1f2937;
-    }
-    .lista-personale {
-        margin: 0.08rem 0 0.25rem 1.1rem;
-        padding: 0;
-        font-size: 0.88rem;
-        line-height: 1.28;
-        color: #1f2937;
-    }
-    .lista-personale li {
-        margin-bottom: 0.06rem;
-    }
-
-    /* Dettaglio postazione a pagina singola: testi ben leggibili su cellulare e tablet */
-    .dettaglio-titolo {
-        font-size: 1.45rem;
-        font-weight: 700;
-        margin: 0 0 0.5rem 0;
-        line-height: 1.25;
-        color: #111827;
-    }
-    .dettaglio-riga {
-        font-size: 1.05rem;
-        line-height: 1.45;
-        margin: 0.45rem 0;
-        color: #1f2937;
-    }
-    .dettaglio-lista {
-        margin: 0.2rem 0 0.5rem 1.25rem;
-        padding: 0;
-        font-size: 1.02rem;
-        line-height: 1.4;
-        color: #1f2937;
-    }
-    .dettaglio-lista li {
-        margin-bottom: 0.15rem;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
 )
 
 # --- GESTIONE STATI ---
@@ -278,9 +133,12 @@ def carica_etichette() -> dict:
     with ETICHETTE_FILE.open("r", encoding="utf-8") as f:
         dati = json.load(f)
     if isinstance(dati, dict):
-        for chiave in ETICHETTE_DEFAULT:
+        for chiave, default_val in ETICHETTE_DEFAULT.items():
             val = dati.get(chiave)
-            if isinstance(val, str) and val.strip():
+            if isinstance(default_val, int):
+                if isinstance(val, int) and 10 <= val <= 64:
+                    copia[chiave] = val
+            elif isinstance(val, str) and val.strip():
                 copia[chiave] = val.strip()
     return copia
 
@@ -471,6 +329,258 @@ postazioni = carica_postazioni()
 risorse = carica_risorse()
 etichette = carica_etichette()
 
+# --- COSTRUZIONE VARIABILI CSS DAI PARAMETRI SALVATI ---
+t_font = FONT_OPZIONI.get(etichette["stile_titolo_font"], "inherit")
+t_size = etichette["stile_titolo_size"]
+t_col = etichette["stile_titolo_colore"]
+t_style, t_weight = STILE_TESTO_OPZIONI.get(etichette["stile_titolo_peso"], ("normal", "700"))
+
+s_font = FONT_OPZIONI.get(etichette["stile_sottotitolo_font"], "inherit")
+s_size = etichette["stile_sottotitolo_size"]
+s_col = etichette["stile_sottotitolo_colore"]
+s_style, s_weight = STILE_TESTO_OPZIONI.get(etichette["stile_sottotitolo_peso"], ("normal", "400"))
+
+e_font = FONT_OPZIONI.get(etichette["stile_etichette_font"], "inherit")
+e_size = etichette["stile_etichette_size"]
+e_col = etichette["stile_etichette_colore"]
+e_style, e_weight = STILE_TESTO_OPZIONI.get(etichette["stile_etichette_peso"], ("normal", "700"))
+
+c_font = FONT_OPZIONI.get(etichette["stile_contenuti_font"], "inherit")
+c_size = etichette["stile_contenuti_size"]
+c_col = etichette["stile_contenuti_colore"]
+c_style, c_weight = STILE_TESTO_OPZIONI.get(etichette["stile_contenuti_peso"], ("normal", "400"))
+
+# --- STILE CSS DINAMICO ---
+st.markdown(
+    f"""
+    <style>
+    /* Sfondo azzurrino tenue riposante per la lettura */
+    [data-testid="stAppViewContainer"] {{
+        background: linear-gradient(180deg, #eaf4fb 0%, #dcebf7 100%) !important;
+        color: #111827 !important;
+    }}
+
+    /* Forza colore scuro leggibile sui testi standard anche con tema scuro su cellulare/tablet */
+    [data-testid="stAppViewContainer"] h1,
+    [data-testid="stAppViewContainer"] h2,
+    [data-testid="stAppViewContainer"] h3,
+    [data-testid="stAppViewContainer"] h4,
+    [data-testid="stAppViewContainer"] p,
+    [data-testid="stAppViewContainer"] label,
+    [data-testid="stAppViewContainer"] .stMarkdown,
+    [data-testid="stAppViewContainer"] .stMarkdown p,
+    [data-testid="stAppViewContainer"] .stMarkdown li,
+    [data-testid="stAppViewContainer"] [data-testid="stCaptionContainer"],
+    [data-testid="stAppViewContainer"] [data-testid="stCaptionContainer"] *,
+    [data-testid="stAppViewContainer"] [data-testid="stExpander"] summary,
+    [data-testid="stAppViewContainer"] [data-testid="stExpander"] summary * {{
+        color: #111827 !important;
+    }}
+
+    /* --- STILI PERSONALIZZATI DALL'AREA RISERVATA --- */
+    .titolo-home-custom {{
+        font-family: {t_font} !important;
+        font-size: {t_size}px !important;
+        color: {t_col} !important;
+        font-style: {t_style} !important;
+        font-weight: {t_weight} !important;
+        line-height: 1.2 !important;
+        margin: 0.2rem 0 0.45rem 0 !important;
+    }}
+
+    .sottotitolo-home-custom {{
+        font-family: {s_font} !important;
+        font-size: {s_size}px !important;
+        color: {s_col} !important;
+        font-style: {s_style} !important;
+        font-weight: {s_weight} !important;
+        line-height: 1.4 !important;
+        margin: 0 0 0.9rem 0 !important;
+    }}
+
+    /* Intestazioni tendine, ricerca e titoli sezione */
+    [data-testid="stAppViewContainer"] [data-testid="stExpander"] summary p,
+    [data-testid="stAppViewContainer"] [data-testid="stTextInput"] label p,
+    .intestazione-sezione-custom {{
+        font-family: {e_font} !important;
+        font-size: {e_size}px !important;
+        color: {e_col} !important;
+        font-style: {e_style} !important;
+        font-weight: {e_weight} !important;
+    }}
+
+    .etichetta-campo-custom {{
+        font-family: {e_font} !important;
+        font-size: {e_size}px !important;
+        color: {e_col} !important;
+        font-style: {e_style} !important;
+        font-weight: {e_weight} !important;
+    }}
+
+    /* Campi di testo e aree di testo leggibili su cellulare e tablet */
+    [data-testid="stAppViewContainer"] input,
+    [data-testid="stAppViewContainer"] textarea {{
+        color: #111827 !important;
+        background-color: #ffffff !important;
+    }}
+    [data-testid="stAppViewContainer"] input::placeholder,
+    [data-testid="stAppViewContainer"] textarea::placeholder {{
+        color: #6b7280 !important;
+        opacity: 1 !important;
+    }}
+
+    /* Pulsanti blu scuro a pillola (Torna alla Home / Logout / Area Riservata) */
+    div[data-testid="stButton"] > button[kind="primary"],
+    div[data-testid="stButton"] > button[kind="primary"] * {{
+        background-color: #142143 !important;
+        color: #ffffff !important;
+        border: 2px solid #3b1d36 !important;
+        border-radius: 50px !important;
+        padding: 0.5rem 1.4rem !important;
+        font-weight: 600 !important;
+        font-size: 0.98rem !important;
+        transition: all 0.2s ease-in-out;
+    }}
+    div[data-testid="stButton"] > button[kind="primary"]:hover {{
+        background-color: #1e3263 !important;
+        border-color: #5c2d54 !important;
+    }}
+
+    /* Pulsante "Pubblica" bianco largo nei form */
+    div[data-testid="stFormSubmitButton"] > button[kind="primary"] {{
+        background-color: #ffffff !important;
+        color: #1f2937 !important;
+        border: 1px solid #d1d5db !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 1rem !important;
+        font-weight: 600 !important;
+        width: 100% !important;
+    }}
+    div[data-testid="stFormSubmitButton"] > button[kind="primary"]:hover {{
+        background-color: #f3f4f6 !important;
+        border-color: #9ca3af !important;
+    }}
+
+    /* Riquadri schede (st.container(border=True)) */
+    div[data-testid="stVerticalBlockBorderWrapper"] {{
+        max-width: 100% !important;
+        background-color: #f8fcff !important;
+    }}
+    div[data-testid="stVerticalBlockBorderWrapper"] > div {{
+        padding: 0.75rem 0.85rem !important;
+    }}
+
+    /* Compatta la distanza tra gli elementi dentro i riquadri */
+    div[data-testid="stVerticalBlockBorderWrapper"] .element-container {{
+        margin-bottom: 0.25rem !important;
+    }}
+
+    /* Pulsante Espandi / Riduci immagine */
+    div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stButton"] > button {{
+        padding: 0.3rem 0.75rem !important;
+        font-size: 0.85rem !important;
+        min-height: 0 !important;
+    }}
+
+    /* Immagini grandi sulla Home per una lettura chiara già al primo sguardo */
+    div[data-testid="stImage"].img-compatta img {{
+        width: 100% !important;
+        max-height: 290px !important;
+        object-fit: contain !important;
+        border-radius: 6px !important;
+    }}
+
+    /* Immagini espanse per il massimo dettaglio */
+    div[data-testid="stImage"].img-espansa img {{
+        width: 100% !important;
+        max-height: none !important;
+        object-fit: contain !important;
+        border-radius: 8px !important;
+    }}
+
+    /* Piantina generale ampia e leggibile su cellulare e tablet */
+    div[data-testid="stImage"].mappa-compatta img {{
+        width: 100% !important;
+        max-height: 360px !important;
+        object-fit: contain !important;
+        border-radius: 6px !important;
+    }}
+
+    div[data-testid="stImage"].mappa-espansa img {{
+        width: 100% !important;
+        max-height: none !important;
+        object-fit: contain !important;
+        border-radius: 8px !important;
+    }}
+
+    /* Testo nelle schede postazione */
+    .scheda-titolo {{
+        font-family: {e_font} !important;
+        font-size: {max(e_size + 1, 16)}px !important;
+        font-weight: 700 !important;
+        margin: 0 0 0.35rem 0;
+        line-height: 1.25;
+        color: {e_col} !important;
+    }}
+    .scheda-riga {{
+        font-family: {c_font} !important;
+        font-size: {c_size}px !important;
+        font-style: {c_style} !important;
+        font-weight: {c_weight} !important;
+        line-height: 1.35;
+        margin: 0.25rem 0;
+        color: {c_col} !important;
+    }}
+    .lista-personale {{
+        margin: 0.08rem 0 0.25rem 1.15rem;
+        padding: 0;
+        font-family: {c_font} !important;
+        font-size: {c_size}px !important;
+        font-style: {c_style} !important;
+        font-weight: {c_weight} !important;
+        line-height: 1.32;
+        color: {c_col} !important;
+    }}
+    .lista-personale li {{
+        margin-bottom: 0.08rem;
+    }}
+
+    /* Dettaglio postazione a pagina singola: testi ben leggibili su cellulare e tablet */
+    .dettaglio-titolo {{
+        font-family: {t_font} !important;
+        font-size: {max(t_size - 4, 22)}px !important;
+        font-weight: 700 !important;
+        margin: 0 0 0.5rem 0;
+        line-height: 1.25;
+        color: {t_col} !important;
+    }}
+    .dettaglio-riga {{
+        font-family: {c_font} !important;
+        font-size: {c_size + 2}px !important;
+        font-style: {c_style} !important;
+        font-weight: {c_weight} !important;
+        line-height: 1.45;
+        margin: 0.45rem 0;
+        color: {c_col} !important;
+    }}
+    .dettaglio-lista {{
+        margin: 0.2rem 0 0.5rem 1.25rem;
+        padding: 0;
+        font-family: {c_font} !important;
+        font-size: {c_size + 2}px !important;
+        font-style: {c_style} !important;
+        font-weight: {c_weight} !important;
+        line-height: 1.4;
+        color: {c_col} !important;
+    }}
+    .dettaglio-lista li {{
+        margin-bottom: 0.15rem;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 # ==============================================================================
 # BARRA SUPERIORE
 # ==============================================================================
@@ -547,41 +657,47 @@ if st.session_state.pagina == "home":
 
             if id_val:
                 st.markdown(
-                    f'<div class="dettaglio-riga"><strong>{etichette["campo_id"]}:</strong> {id_val}</div>',
+                    f'<div class="dettaglio-riga"><span class="etichetta-campo-custom">{etichette["campo_id"]}:</span> {id_val}</div>',
                     unsafe_allow_html=True,
                 )
             if nome_val:
                 st.markdown(
-                    f'<div class="dettaglio-riga"><strong>{etichette["campo_nome"]}:</strong> {nome_val}</div>',
+                    f'<div class="dettaglio-riga"><span class="etichetta-campo-custom">{etichette["campo_nome"]}:</span> {nome_val}</div>',
                     unsafe_allow_html=True,
                 )
 
             st.markdown(
-                f'<div class="dettaglio-riga"><strong>{etichette["campo_radio"]}:</strong> {radio_txt}</div>',
+                f'<div class="dettaglio-riga"><span class="etichetta-campo-custom">{etichette["campo_radio"]}:</span> {radio_txt}</div>',
                 unsafe_allow_html=True,
             )
 
             if nomi_pers:
                 voci_li = "".join(f"<li>{nome}</li>" for nome in nomi_pers)
                 st.markdown(
-                    f'<div class="dettaglio-riga"><strong>{etichette["campo_personale"]}:</strong></div>'
+                    f'<div class="dettaglio-riga"><span class="etichetta-campo-custom">{etichette["campo_personale"]}:</span></div>'
                     f'<ul class="dettaglio-lista">{voci_li}</ul>',
                     unsafe_allow_html=True,
                 )
             else:
                 st.markdown(
-                    f'<div class="dettaglio-riga"><strong>{etichette["campo_personale"]}:</strong> -</div>',
+                    f'<div class="dettaglio-riga"><span class="etichetta-campo-custom">{etichette["campo_personale"]}:</span> -</div>',
                     unsafe_allow_html=True,
                 )
 
             st.markdown(
-                f'<div class="dettaglio-riga"><strong>{etichette["campo_commenti"]}:</strong> {commenti_txt}</div>',
+                f'<div class="dettaglio-riga"><span class="etichetta-campo-custom">{etichette["campo_commenti"]}:</span> {commenti_txt}</div>',
                 unsafe_allow_html=True,
             )
 
     else:
-        st.title(etichette["titolo_home"])
-        st.caption(etichette["sottotitolo_home"])
+        st.markdown(
+            f'<h1 class="titolo-home-custom">{etichette["titolo_home"]}</h1>',
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f'<div class="sottotitolo-home-custom">{etichette["sottotitolo_home"]}</div>',
+            unsafe_allow_html=True,
+        )
 
         mappa_path = IMG_DIR / "mappa_generale.jpg"
 
@@ -626,7 +742,7 @@ if st.session_state.pagina == "home":
                             with cols_r[col_r_idx]:
                                 with st.container(border=True):
                                     nome_r = r_img.get("file", "")
-                                    titolo_r = r_img.get("titolo") or nome_r
+                                    titolo_r = r_img.get("titolo") or ""
                                     if titolo_r:
                                         st.markdown(f"**{titolo_r}**")
                                     mostra_immagine_espandibile(
@@ -654,7 +770,10 @@ if st.session_state.pagina == "home":
 
         postazioni_ordinate = sorted(postazioni_filtrate, key=chiave_ordinamento_postazione)
 
-        st.subheader(f"{etichette['titolo_postazioni']} ({len(postazioni_ordinate)})")
+        st.markdown(
+            f'<div class="intestazione-sezione-custom" style="margin: 0.6rem 0;">{etichette["titolo_postazioni"]} ({len(postazioni_ordinate)})</div>',
+            unsafe_allow_html=True,
+        )
 
         if not postazioni_ordinate:
             st.info("Nessuna postazione presente. Accedi all'Area Riservata in alto a destra per inserirle.")
@@ -705,25 +824,25 @@ if st.session_state.pagina == "home":
                             nomi_pers = estrai_lista_personale(str(p.get("personale", "")))
 
                             st.markdown(
-                                f'<div class="scheda-riga"><strong>{etichette["campo_radio"]}:</strong> {radio_txt}</div>',
+                                f'<div class="scheda-riga"><span class="etichetta-campo-custom">{etichette["campo_radio"]}:</span> {radio_txt}</div>',
                                 unsafe_allow_html=True,
                             )
 
                             if nomi_pers:
                                 voci_li = "".join(f"<li>{nome}</li>" for nome in nomi_pers)
                                 st.markdown(
-                                    f'<div class="scheda-riga"><strong>{etichette["campo_personale"]}:</strong></div>'
+                                    f'<div class="scheda-riga"><span class="etichetta-campo-custom">{etichette["campo_personale"]}:</span></div>'
                                     f'<ul class="lista-personale">{voci_li}</ul>',
                                     unsafe_allow_html=True,
                                 )
                             else:
                                 st.markdown(
-                                    f'<div class="scheda-riga"><strong>{etichette["campo_personale"]}:</strong> -</div>',
+                                    f'<div class="scheda-riga"><span class="etichetta-campo-custom">{etichette["campo_personale"]}:</span> -</div>',
                                     unsafe_allow_html=True,
                                 )
 
                             st.markdown(
-                                f'<div class="scheda-riga"><strong>{etichette["campo_commenti"]}:</strong> {commenti_txt}</div>',
+                                f'<div class="scheda-riga"><span class="etichetta-campo-custom">{etichette["campo_commenti"]}:</span> {commenti_txt}</div>',
                                 unsafe_allow_html=True,
                             )
 
@@ -1018,11 +1137,14 @@ elif st.session_state.pagina == "gestione" and st.session_state.autenticato:
                         salva_risorse(risorse)
                         st.rerun()
 
-    # --- OPZIONE 6: PERSONALIZZA TITOLI & ETICHETTE ---
+    # --- OPZIONE 6: PERSONALIZZA TITOLI, ETICHETTE & STILI ---
     elif azione == "🏷️ Personalizza Titoli & Etichette":
-        st.subheader("Personalizza Titoli & Etichette")
+        st.subheader("Personalizza Titoli, Etichette & Caratteri")
+        nomi_font = list(FONT_OPZIONI.keys())
+        nomi_stili = list(STILE_TESTO_OPZIONI.keys())
+
         with st.form("form_etichette_home"):
-            st.markdown("**Intestazioni della Home**")
+            st.markdown("**1. Testi della Home**")
             c_h1, c_h2 = st.columns(2)
             with c_h1:
                 e_titolo = st.text_input("Titolo principale", value=etichette["titolo_home"])
@@ -1033,17 +1155,64 @@ elif st.session_state.pagina == "gestione" and st.session_state.autenticato:
                 e_risorse = st.text_input("Etichetta Link & Immagini Manifestazione", value=etichette["expander_risorse"])
                 e_postazioni = st.text_input("Intestazione elenco postazioni", value=etichette["titolo_postazioni"])
 
-            st.markdown("**Etichette dei campi delle postazioni (schede Home e form Gestione)**")
+            st.markdown("**2. Etichette dei campi delle postazioni**")
             c_f1, c_f2 = st.columns(2)
             with c_f1:
-                e_campo_id = st.text_input("Etichetta 1° campo (es. Codice Postazione / ID)", value=etichette["campo_id"])
-                e_campo_nome = st.text_input("Etichetta 2° campo (es. Nome Incrocio / Settore)", value=etichette["campo_nome"])
-                e_campo_radio = st.text_input("Etichetta 3° campo (es. Codice radio / Canale)", value=etichette["campo_radio"])
+                e_campo_id = st.text_input("Etichetta 1° campo (es. Codice Postazione)", value=etichette["campo_id"])
+                e_campo_nome = st.text_input("Etichetta 2° campo (es. Nome Incrocio)", value=etichette["campo_nome"])
+                e_campo_radio = st.text_input("Etichetta 3° campo (es. Codice radio)", value=etichette["campo_radio"])
             with c_f2:
-                e_campo_pers = st.text_input("Etichetta 4° campo (es. Personale assegnato / Squadra)", value=etichette["campo_personale"])
-                e_campo_comm = st.text_input("Etichetta 5° campo (es. Commenti / Note)", value=etichette["campo_commenti"])
+                e_campo_pers = st.text_input("Etichetta 4° campo (es. Personale assegnato)", value=etichette["campo_personale"])
+                e_campo_comm = st.text_input("Etichetta 5° campo (es. Commenti)", value=etichette["campo_commenti"])
 
-            salva_et = st.form_submit_button("Pubblica etichette", type="primary", use_container_width=True)
+            st.divider()
+            st.markdown("**3. Carattere, Grandezza, Stile e Colore (salvati automaticamente)**")
+
+            st.caption("Titolo principale")
+            st1, st2, st3, st4 = st.columns([2, 1, 1.3, 1])
+            with st1:
+                f_tit = st.selectbox("Font titolo", nomi_font, index=nomi_font.index(etichette["stile_titolo_font"]) if etichette["stile_titolo_font"] in nomi_font else 0)
+            with st2:
+                s_tit = st.number_input("Grandezza (px)", min_value=16, max_value=60, value=int(etichette["stile_titolo_size"]), key="sz_tit")
+            with st3:
+                w_tit = st.selectbox("Stile", nomi_stili, index=nomi_stili.index(etichette["stile_titolo_peso"]) if etichette["stile_titolo_peso"] in nomi_stili else 1, key="wt_tit")
+            with st4:
+                c_tit = st.color_picker("Colore", value=etichette["stile_titolo_colore"], key="cl_tit")
+
+            st.caption("Sottotitolo della Home")
+            ss1, ss2, ss3, ss4 = st.columns([2, 1, 1.3, 1])
+            with ss1:
+                f_sot = st.selectbox("Font sottotitolo", nomi_font, index=nomi_font.index(etichette["stile_sottotitolo_font"]) if etichette["stile_sottotitolo_font"] in nomi_font else 0)
+            with ss2:
+                s_sot = st.number_input("Grandezza (px)", min_value=12, max_value=42, value=int(etichette["stile_sottotitolo_size"]), key="sz_sot")
+            with ss3:
+                w_sot = st.selectbox("Stile", nomi_stili, index=nomi_stili.index(etichette["stile_sottotitolo_peso"]) if etichette["stile_sottotitolo_peso"] in nomi_stili else 0, key="wt_sot")
+            with ss4:
+                c_sot = st.color_picker("Colore", value=etichette["stile_sottotitolo_colore"], key="cl_sot")
+
+            st.caption("Intestazioni ed Etichette (es. Codice radio, Personale assegnato, Commenti...)")
+            se1, se2, se3, se4 = st.columns([2, 1, 1.3, 1])
+            with se1:
+                f_eti = st.selectbox("Font etichette", nomi_font, index=nomi_font.index(etichette["stile_etichette_font"]) if etichette["stile_etichette_font"] in nomi_font else 0)
+            with se2:
+                s_eti = st.number_input("Grandezza (px)", min_value=12, max_value=36, value=int(etichette["stile_etichette_size"]), key="sz_eti")
+            with se3:
+                w_eti = st.selectbox("Stile", nomi_stili, index=nomi_stili.index(etichette["stile_etichette_peso"]) if etichette["stile_etichette_peso"] in nomi_stili else 1, key="wt_eti")
+            with se4:
+                c_eti = st.color_picker("Colore", value=etichette["stile_etichette_colore"], key="cl_eti")
+
+            st.caption("Testo interno alle etichette (nomi personale, commenti, valori postazione)")
+            sc1, sc2, sc3, sc4 = st.columns([2, 1, 1.3, 1])
+            with sc1:
+                f_con = st.selectbox("Font testi interni", nomi_font, index=nomi_font.index(etichette["stile_contenuti_font"]) if etichette["stile_contenuti_font"] in nomi_font else 0)
+            with sc2:
+                s_con = st.number_input("Grandezza (px)", min_value=12, max_value=36, value=int(etichette["stile_contenuti_size"]), key="sz_con")
+            with sc3:
+                w_con = st.selectbox("Stile", nomi_stili, index=nomi_stili.index(etichette["stile_contenuti_peso"]) if etichette["stile_contenuti_peso"] in nomi_stili else 0, key="wt_con")
+            with sc4:
+                c_con = st.color_picker("Colore", value=etichette["stile_contenuti_colore"], key="cl_con")
+
+            salva_et = st.form_submit_button("Pubblica testi e stili", type="primary", use_container_width=True)
             if salva_et:
                 nuove_et = {
                     "titolo_home": e_titolo.strip() or ETICHETTE_DEFAULT["titolo_home"],
@@ -1057,12 +1226,28 @@ elif st.session_state.pagina == "gestione" and st.session_state.autenticato:
                     "campo_radio": e_campo_radio.strip() or ETICHETTE_DEFAULT["campo_radio"],
                     "campo_personale": e_campo_pers.strip() or ETICHETTE_DEFAULT["campo_personale"],
                     "campo_commenti": e_campo_comm.strip() or ETICHETTE_DEFAULT["campo_commenti"],
+                    "stile_titolo_font": f_tit,
+                    "stile_titolo_size": int(s_tit),
+                    "stile_titolo_colore": c_tit,
+                    "stile_titolo_peso": w_tit,
+                    "stile_sottotitolo_font": f_sot,
+                    "stile_sottotitolo_size": int(s_sot),
+                    "stile_sottotitolo_colore": c_sot,
+                    "stile_sottotitolo_peso": w_sot,
+                    "stile_etichette_font": f_eti,
+                    "stile_etichette_size": int(s_eti),
+                    "stile_etichette_colore": c_eti,
+                    "stile_etichette_peso": w_eti,
+                    "stile_contenuti_font": f_con,
+                    "stile_contenuti_size": int(s_con),
+                    "stile_contenuti_colore": c_con,
+                    "stile_contenuti_peso": w_con,
                 }
                 salva_etichette(nuove_et)
-                st.success("Etichette aggiornate e salvate!")
+                st.success("Testi, caratteri e colori salvati!")
                 st.rerun()
 
-        if st.button("Ripristina etichette predefinite"):
+        if st.button("Ripristina etichette e stili predefiniti"):
             salva_etichette(dict(ETICHETTE_DEFAULT))
-            st.success("Etichette ripristinate ai valori predefiniti.")
+            st.success("Etichette e stili ripristinati ai valori predefiniti.")
             st.rerun()

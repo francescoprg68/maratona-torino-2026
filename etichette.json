@@ -1,6 +1,6 @@
 {
-  "titolo_home": "Turin Marathon 2026 — Orario di servizio : Ore 07:00 direttamente sulle rispettive postazioni fino a cessate esigenze (termine indicativo ore 12:00)",
-  "sottotitolo_home": "Consulta la mappa generale del percorso, le risorse della manifestazione e i dettagli delle postazioni.",
+  "titolo_home": "Turin Marathon 2026 — Orario di servizio : Ore 06:50 / 06:55 Ritrovo in postazione MIKE 54 per appello e consegna radio - Ore 07:00 direttamente sulle rispettive postazioni fino a cessate esigenze (termine indicativo ore 12:00)",
+  "sottotitolo_home": "RACCOMANDAZIONI IMPORTANTI   * Viabilità Nono Settore: Strada del Drosso resterà aperta al traffico in direzione Beinasco, mentre la gara si svolgerà in senso contrario di marcia. * Sicurezza: Stazionare sempre in posizione sicura (marciapiedi, banchine, cordoli) senza mai invadere la carreggiata aperta al traffico né svolgere regolazione del traffico. * Verificare il corretto posizionamento delle transenne alla chiusura e segnalare tempestivamente a \"ZERO\" eventuali criticità o veicoli sul percorso.",
   "expander_mappa": "Persorso su STRADA DEL DROSSO",
   "expander_risorse": "Link & Immagini della Manifestazione",
   "etichetta_ricerca": "Cerca incrocio, ID, radio o personale",
@@ -9,5 +9,21 @@
   "campo_nome": "Nome Incrocio",
   "campo_radio": "personale richiesto",
   "campo_personale": "Personale assegnato",
-  "campo_commenti": "Commenti"
+  "campo_commenti": "Commenti",
+  "stile_titolo_font": "Predefinito (Sistema)",
+  "stile_titolo_size": 32,
+  "stile_titolo_colore": "#111827",
+  "stile_titolo_peso": "Grassetto",
+  "stile_sottotitolo_font": "Predefinito (Sistema)",
+  "stile_sottotitolo_size": 18,
+  "stile_sottotitolo_colore": "#e20d44",
+  "stile_sottotitolo_peso": "Grassetto + Corsivo",
+  "stile_etichette_font": "Predefinito (Sistema)",
+  "stile_etichette_size": 16,
+  "stile_etichette_colore": "#111827",
+  "stile_etichette_peso": "Grassetto",
+  "stile_contenuti_font": "Predefinito (Sistema)",
+  "stile_contenuti_size": 15,
+  "stile_contenuti_colore": "#1f2937",
+  "stile_contenuti_peso": "Normale"
 }
