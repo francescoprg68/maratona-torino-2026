@@ -390,12 +390,13 @@ def mostra_immagine_espandibile(
     chiave_univoca: str,
     width_compatta: int = 200,
     is_mappa: bool = False,
+    mostra_bottone: bool = True,
 ):
     if not img_path.exists():
         st.warning(f"Immagine non trovata: `{img_path.name}`")
         return
 
-    espansa = chiave_univoca in st.session_state.img_espanse
+    espansa = mostra_bottone and (chiave_univoca in st.session_state.img_espanse)
 
     if is_mappa:
         classe_css = "mappa-espansa" if espansa else "mappa-compatta"
@@ -406,13 +407,14 @@ def mostra_immagine_espandibile(
     st.image(str(img_path), caption=caption, use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    etichetta_btn = "↩️ Riduci" if espansa else "🔍 Espandi"
-    if st.button(etichetta_btn, key=f"btn_zoom_{chiave_univoca}"):
-        if espansa:
-            st.session_state.img_espanse.discard(chiave_univoca)
-        else:
-            st.session_state.img_espanse.add(chiave_univoca)
-        st.rerun()
+    if mostra_bottone:
+        etichetta_btn = "↩️ Riduci" if espansa else "🔍 Espandi"
+        if st.button(etichetta_btn, key=f"btn_zoom_{chiave_univoca}"):
+            if espansa:
+                st.session_state.img_espanse.discard(chiave_univoca)
+            else:
+                st.session_state.img_espanse.add(chiave_univoca)
+            st.rerun()
 
 
 def trova_postazione_da_chiave(chiave: str | None, elenco: list[dict]) -> dict | None:
@@ -536,6 +538,7 @@ if st.session_state.pagina == "home":
                         caption=img_nome,
                         chiave_univoca=f"det_{id_val}_{nome_val}_{img_idx}_{img_nome}",
                         width_compatta=320,
+                        mostra_bottone=False,
                     )
             else:
                 st.caption("Nessuna foto associata.")
@@ -592,6 +595,7 @@ if st.session_state.pagina == "home":
                     chiave_univoca="mappa_generale_home",
                     width_compatta=280,
                     is_mappa=True,
+                    mostra_bottone=True,
                 )
             else:
                 st.warning("Inserisci il file `immagini/mappa_generale.jpg` nella cartella `immagini`.")
@@ -631,6 +635,7 @@ if st.session_state.pagina == "home":
                                         caption=titolo_r,
                                         chiave_univoca=f"risorsa_img_{r_idx}_{nome_r}",
                                         width_compatta=200,
+                                        mostra_bottone=False,
                                     )
                                     if r_img.get("fonte_url"):
                                         st.caption(f"Fonte: {r_img['fonte_url']}")
@@ -693,6 +698,7 @@ if st.session_state.pagina == "home":
                                         caption=img_nome,
                                         chiave_univoca=f"post_{idx}_{img_idx}_{img_nome}",
                                         width_compatta=200,
+                                        mostra_bottone=False,
                                     )
                             else:
                                 st.caption("Nessuna foto associata.")
