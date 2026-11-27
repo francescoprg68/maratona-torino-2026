@@ -116,60 +116,77 @@ st.markdown(
         border-color: #9ca3af !important;
     }
 
-    /* Riduce larghezza e padding interno dei riquadri (st.container(border=True)) */
+    /* Riquadri schede (st.container(border=True)) */
     div[data-testid="stVerticalBlockBorderWrapper"] {
-        max-width: 320px !important;
+        max-width: 100% !important;
         background-color: #f8fcff !important;
     }
     div[data-testid="stVerticalBlockBorderWrapper"] > div {
-        padding: 0.65rem 0.75rem !important;
+        padding: 0.75rem 0.85rem !important;
     }
 
     /* Compatta la distanza tra gli elementi dentro i riquadri */
     div[data-testid="stVerticalBlockBorderWrapper"] .element-container {
-        margin-bottom: 0.2rem !important;
+        margin-bottom: 0.25rem !important;
     }
 
-    /* Riduce il pulsante Espandi / Riduci immagine */
+    /* Pulsante Espandi / Riduci immagine */
     div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stButton"] > button {
-        padding: 0.2rem 0.6rem !important;
-        font-size: 0.8rem !important;
+        padding: 0.3rem 0.75rem !important;
+        font-size: 0.85rem !important;
         min-height: 0 !important;
     }
 
-    /* Immagini compatte di default per la fruizione su cellulare */
+    /* Immagini grandi sulla Home per una lettura chiara già al primo sguardo */
     div[data-testid="stImage"].img-compatta img {
-        max-height: 160px !important;
-        object-fit: cover !important;
-        border-radius: 6px !important;
-    }
-
-    /* Immagini espanse per una lettura dettagliata */
-    div[data-testid="stImage"].img-espansa img {
-        max-height: none !important;
+        width: 100% !important;
+        max-height: 290px !important;
         object-fit: contain !important;
         border-radius: 6px !important;
     }
 
+    /* Immagini espanse per il massimo dettaglio */
+    div[data-testid="stImage"].img-espansa img {
+        width: 100% !important;
+        max-height: none !important;
+        object-fit: contain !important;
+        border-radius: 8px !important;
+    }
+
+    /* Piantina generale ampia e leggibile su cellulare e tablet */
+    div[data-testid="stImage"].mappa-compatta img {
+        width: 100% !important;
+        max-height: 360px !important;
+        object-fit: contain !important;
+        border-radius: 6px !important;
+    }
+
+    div[data-testid="stImage"].mappa-espansa img {
+        width: 100% !important;
+        max-height: none !important;
+        object-fit: contain !important;
+        border-radius: 8px !important;
+    }
+
     /* Testo compatto nelle schede postazione */
     .scheda-titolo {
-        font-size: 1rem;
+        font-size: 1.05rem;
         font-weight: 700;
-        margin: 0 0 0.3rem 0;
+        margin: 0 0 0.35rem 0;
         line-height: 1.25;
         color: #111827;
     }
     .scheda-riga {
-        font-size: 0.88rem;
-        line-height: 1.28;
-        margin: 0.2rem 0;
+        font-size: 0.9rem;
+        line-height: 1.3;
+        margin: 0.22rem 0;
         color: #1f2937;
     }
     .lista-personale {
-        margin: 0.08rem 0 0.2rem 1.05rem;
+        margin: 0.08rem 0 0.25rem 1.1rem;
         padding: 0;
-        font-size: 0.86rem;
-        line-height: 1.25;
+        font-size: 0.88rem;
+        line-height: 1.28;
         color: #1f2937;
     }
     .lista-personale li {
@@ -339,21 +356,26 @@ def chiave_ordinamento_postazione(postazione: dict):
     )
 
 
-def mostra_immagine_espandibile(img_path: Path, caption: str, chiave_univoca: str, width_compatta: int = 200):
+def mostra_immagine_espandibile(
+    img_path: Path,
+    caption: str,
+    chiave_univoca: str,
+    width_compatta: int = 200,
+    is_mappa: bool = False,
+):
     if not img_path.exists():
         st.warning(f"Immagine non trovata: `{img_path.name}`")
         return
 
     espansa = chiave_univoca in st.session_state.img_espanse
 
-    st.markdown(
-        f'<div class="{"img-espansa" if espansa else "img-compatta"}">',
-        unsafe_allow_html=True,
-    )
-    if espansa:
-        st.image(str(img_path), caption=caption, use_container_width=True)
+    if is_mappa:
+        classe_css = "mappa-espansa" if espansa else "mappa-compatta"
     else:
-        st.image(str(img_path), caption=caption, width=width_compatta)
+        classe_css = "img-espansa" if espansa else "img-compatta"
+
+    st.markdown(f'<div class="{classe_css}">', unsafe_allow_html=True)
+    st.image(str(img_path), caption=caption, use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
     etichetta_btn = "↩️ Riduci" if espansa else "🔍 Espandi"
@@ -451,6 +473,7 @@ if st.session_state.pagina == "home":
                 caption="Mappa generale Turin Marathon 2026",
                 chiave_univoca="mappa_generale_home",
                 width_compatta=280,
+                is_mappa=True,
             )
         else:
             st.warning("Inserisci il file `immagini/mappa_generale.jpg` nella cartella `immagini`.")
@@ -700,7 +723,7 @@ elif st.session_state.pagina == "gestione" and st.session_state.autenticato:
                             p_img = IMG_DIR / nome_img
                             if p_img.exists():
                                 st.markdown('<div class="img-compatta">', unsafe_allow_html=True)
-                                st.image(str(p_img), caption=nome_img, width=160)
+                                st.image(str(p_img), caption=nome_img, use_container_width=True)
                                 st.markdown("</div>", unsafe_allow_html=True)
                             else:
                                 st.warning(f"File non trovato: {nome_img}")
@@ -774,8 +797,8 @@ elif st.session_state.pagina == "gestione" and st.session_state.autenticato:
         st.subheader("Aggiorna Mappa Generale del Percorso")
         mappa_att = IMG_DIR / "mappa_generale.jpg"
         if mappa_att.exists():
-            st.markdown('<div class="img-compatta">', unsafe_allow_html=True)
-            st.image(str(mappa_att), caption="Mappa generale attuale", width=280)
+            st.markdown('<div class="mappa-compatta">', unsafe_allow_html=True)
+            st.image(str(mappa_att), caption="Mappa generale attuale", use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
         with st.form("form_mappa_generale"):
             nuova_mappa = st.file_uploader("Carica nuova mappa generale JPG", type=["jpg", "jpeg"])
