@@ -386,7 +386,6 @@ def chiave_ordinamento_postazione(postazione: dict):
 
 def mostra_immagine_espandibile(
     img_path: Path,
-    caption: str,
     chiave_univoca: str,
     width_compatta: int = 200,
     is_mappa: bool = False,
@@ -404,7 +403,7 @@ def mostra_immagine_espandibile(
         classe_css = "img-espansa" if espansa else "img-compatta"
 
     st.markdown(f'<div class="{classe_css}">', unsafe_allow_html=True)
-    st.image(str(img_path), caption=caption, use_container_width=True)
+    st.image(str(img_path), use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
     if mostra_bottone:
@@ -535,7 +534,6 @@ if st.session_state.pagina == "home":
                     img_path = IMG_DIR / img_nome
                     mostra_immagine_espandibile(
                         img_path=img_path,
-                        caption=img_nome,
                         chiave_univoca=f"det_{id_val}_{nome_val}_{img_idx}_{img_nome}",
                         width_compatta=320,
                         mostra_bottone=False,
@@ -591,7 +589,6 @@ if st.session_state.pagina == "home":
             if mappa_path.exists():
                 mostra_immagine_espandibile(
                     img_path=mappa_path,
-                    caption="Mappa generale Turin Marathon 2026",
                     chiave_univoca="mappa_generale_home",
                     width_compatta=280,
                     is_mappa=True,
@@ -630,9 +627,10 @@ if st.session_state.pagina == "home":
                                 with st.container(border=True):
                                     nome_r = r_img.get("file", "")
                                     titolo_r = r_img.get("titolo") or nome_r
+                                    if titolo_r:
+                                        st.markdown(f"**{titolo_r}**")
                                     mostra_immagine_espandibile(
                                         img_path=IMG_DIR / nome_r,
-                                        caption=titolo_r,
                                         chiave_univoca=f"risorsa_img_{r_idx}_{nome_r}",
                                         width_compatta=200,
                                         mostra_bottone=False,
@@ -695,7 +693,6 @@ if st.session_state.pagina == "home":
                                     img_path = IMG_DIR / img_nome
                                     mostra_immagine_espandibile(
                                         img_path=img_path,
-                                        caption=img_nome,
                                         chiave_univoca=f"post_{idx}_{img_idx}_{img_nome}",
                                         width_compatta=200,
                                         mostra_bottone=False,
@@ -855,7 +852,7 @@ elif st.session_state.pagina == "gestione" and st.session_state.autenticato:
                             p_img = IMG_DIR / nome_img
                             if p_img.exists():
                                 st.markdown('<div class="img-compatta">', unsafe_allow_html=True)
-                                st.image(str(p_img), caption=nome_img, use_container_width=True)
+                                st.image(str(p_img), use_container_width=True)
                                 st.markdown("</div>", unsafe_allow_html=True)
                             else:
                                 st.warning(f"File non trovato: {nome_img}")
@@ -930,7 +927,7 @@ elif st.session_state.pagina == "gestione" and st.session_state.autenticato:
         mappa_att = IMG_DIR / "mappa_generale.jpg"
         if mappa_att.exists():
             st.markdown('<div class="mappa-compatta">', unsafe_allow_html=True)
-            st.image(str(mappa_att), caption="Mappa generale attuale", use_container_width=True)
+            st.image(str(mappa_att), use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
         with st.form("form_mappa_generale"):
             nuova_mappa = st.file_uploader("Carica nuova mappa generale JPG", type=["jpg", "jpeg"])
