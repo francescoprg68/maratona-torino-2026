@@ -192,6 +192,31 @@ st.markdown(
     .lista-personale li {
         margin-bottom: 0.06rem;
     }
+
+    /* Dettaglio postazione a pagina singola: testi ben leggibili su cellulare e tablet */
+    .dettaglio-titolo {
+        font-size: 1.45rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem 0;
+        line-height: 1.25;
+        color: #111827;
+    }
+    .dettaglio-riga {
+        font-size: 1.05rem;
+        line-height: 1.45;
+        margin: 0.45rem 0;
+        color: #1f2937;
+    }
+    .dettaglio-lista {
+        margin: 0.2rem 0 0.5rem 1.25rem;
+        padding: 0;
+        font-size: 1.02rem;
+        line-height: 1.4;
+        color: #1f2937;
+    }
+    .dettaglio-lista li {
+        margin-bottom: 0.15rem;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -203,6 +228,9 @@ if "autenticato" not in st.session_state:
 
 if "pagina" not in st.session_state:
     st.session_state.pagina = "home"
+
+if "postazione_selezionata" not in st.session_state:
+    st.session_state.postazione_selezionata = None
 
 if "img_espanse" not in st.session_state:
     st.session_state.img_espanse = set()
@@ -387,6 +415,17 @@ def mostra_immagine_espandibile(
         st.rerun()
 
 
+def trova_postazione_da_chiave(chiave: str | None, elenco: list[dict]) -> dict | None:
+    if not chiave:
+        return None
+    for p in elenco:
+        id_v = str(p.get("id", "")).strip()
+        nome_v = str(p.get("nome", "")).strip()
+        if f"{id_v}||{nome_v}" == chiave:
+            return p
+    return None
+
+
 # --- FINESTRA MODALE AREA RISERVATA ---
 @st.dialog("Area Riservata")
 def apri_dialog_login():
@@ -420,6 +459,7 @@ def apri_dialog_login():
         if accedi:
             if verifica_password(pwd, get_password_area_riservata()):
                 st.session_state.autenticato = True
+                st.session_state.postazione_selezionata = None
                 st.session_state.pagina = "gestione"
                 st.rerun()
             else:
@@ -437,11 +477,13 @@ if st.session_state.pagina == "gestione" and st.session_state.autenticato:
     c_home, c_logout = st.columns(2)
     with c_home:
         if st.button("🏠 Torna alla Home", type="primary", use_container_width=True):
+            st.session_state.postazione_selezionata = None
             st.session_state.pagina = "home"
             st.rerun()
     with c_logout:
         if st.button("🚪 Logout", type="primary", use_container_width=True):
             st.session_state.autenticato = False
+            st.session_state.postazione_selezionata = None
             st.session_state.pagina = "home"
             st.rerun()
 else:
@@ -449,6 +491,7 @@ else:
     with c_riservata:
         if st.session_state.autenticato:
             if st.button("⚙️ Gestione Postazioni", type="primary", use_container_width=True):
+                st.session_state.postazione_selezionata = None
                 st.session_state.pagina = "gestione"
                 st.rerun()
         else:
@@ -458,145 +501,228 @@ else:
 st.divider()
 
 # ==============================================================================
-# PAGINA 1: HOME
+# PAGINA 1: HOME (O SCHEDA SINGOLA POSTAZIONE SELEZIONATA)
 # ==============================================================================
 if st.session_state.pagina == "home":
-    st.title(etichette["titolo_home"])
-    st.caption(etichette["sottotitolo_home"])
+    post_dettaglio = trova_postazione_da_chiave(st.session_state.postazione_selezionata, postazioni)
 
-    mappa_path = IMG_DIR / "mappa_generale.jpg"
+    if post_dettaglio is not None:
+        if st.button("⬅️ Torna a tutte le postazioni", type="primary", use_container_width=True):
+            st.session_state.postazione_selezionata = None
+            st.rerun()
 
-    with st.expander(etichette["expander_mappa"], expanded=False):
-        if mappa_path.exists():
-            mostra_immagine_espandibile(
-                img_path=mappa_path,
-                caption="Mappa generale Turin Marathon 2026",
-                chiave_univoca="mappa_generale_home",
-                width_compatta=280,
-                is_mappa=True,
+        st.divider()
+
+        id_val = str(post_dettaglio.get("id", "")).strip()
+        nome_val = str(post_dettaglio.get("nome", "")).strip()
+        intestazione_det = (
+            f"{id_val} — {nome_val}"
+            if id_val and nome_val
+            else (id_val or nome_val or "Dettaglio postazione")
+        )
+
+        with st.container(border=True):
+            st.markdown(
+                f'<div class="dettaglio-titolo">{intestazione_det}</div>',
+                unsafe_allow_html=True,
             )
-        else:
-            st.warning("Inserisci il file `immagini/mappa_generale.jpg` nella cartella `immagini`.")
 
-    # --- SPAZIO LINK & IMMAGINI DELLA MANIFESTAZIONE ---
-    link_lista = risorse.get("link", [])
-    img_lista = risorse.get("immagini", [])
-    titolo_risorse_exp = f"{etichette['expander_risorse']} ({len(link_lista)} link · {len(img_lista)} immagini)"
-    with st.expander(titolo_risorse_exp, expanded=False):
-        if not link_lista and not img_lista:
-            st.info("Nessun link o immagine della manifestazione inserito. Puoi aggiungerli dall'Area Riservata.")
-        else:
-            if link_lista:
-                st.markdown("**Link utili della manifestazione**")
-                for item in link_lista:
-                    titolo_l = item.get("titolo") or item.get("url", "Link")
-                    url_l = url_sicuro(item.get("url", ""))
-                    nota_l = item.get("nota", "")
-                    if url_l:
-                        st.markdown(f"- [{titolo_l}]({url_l})" + (f" — {nota_l}" if nota_l else ""))
-                    else:
-                        st.markdown(f"- **{titolo_l}**" + (f" — {nota_l}" if nota_l else ""))
+            imgs_det = estrai_immagini(post_dettaglio)
+            if imgs_det:
+                for img_idx, img_nome in enumerate(imgs_det):
+                    img_path = IMG_DIR / img_nome
+                    mostra_immagine_espandibile(
+                        img_path=img_path,
+                        caption=img_nome,
+                        chiave_univoca=f"det_{id_val}_{nome_val}_{img_idx}_{img_nome}",
+                        width_compatta=320,
+                    )
+            else:
+                st.caption("Nessuna foto associata.")
 
-            if img_lista:
-                st.markdown("**Immagini della manifestazione**")
-                for inizio_r in range(0, len(img_lista), 3):
-                    riga_r = img_lista[inizio_r : inizio_r + 3]
-                    cols_r = st.columns(3)
-                    for col_r_idx, r_img in enumerate(riga_r):
-                        r_idx = inizio_r + col_r_idx
-                        with cols_r[col_r_idx]:
-                            with st.container(border=True):
-                                nome_r = r_img.get("file", "")
-                                titolo_r = r_img.get("titolo") or nome_r
-                                mostra_immagine_espandibile(
-                                    img_path=IMG_DIR / nome_r,
-                                    caption=titolo_r,
-                                    chiave_univoca=f"risorsa_img_{r_idx}_{nome_r}",
-                                    width_compatta=200,
-                                )
-                                if r_img.get("fonte_url"):
-                                    st.caption(f"Fonte: {r_img['fonte_url']}")
+            radio_txt = post_dettaglio.get("codice_radio") or "-"
+            commenti_txt = post_dettaglio.get("commenti") or "-"
+            nomi_pers = estrai_lista_personale(str(post_dettaglio.get("personale", "")))
 
-    filtro = st.text_input(etichette["etichetta_ricerca"], "").strip().lower()
+            if id_val:
+                st.markdown(
+                    f'<div class="dettaglio-riga"><strong>{etichette["campo_id"]}:</strong> {id_val}</div>',
+                    unsafe_allow_html=True,
+                )
+            if nome_val:
+                st.markdown(
+                    f'<div class="dettaglio-riga"><strong>{etichette["campo_nome"]}:</strong> {nome_val}</div>',
+                    unsafe_allow_html=True,
+                )
 
-    if filtro:
-        postazioni_filtrate = [
-            p for p in postazioni
-            if filtro in str(p.get("id", "")).lower()
-            or filtro in str(p.get("nome", "")).lower()
-            or filtro in str(p.get("codice_radio", "")).lower()
-            or filtro in str(p.get("personale", "")).lower()
-            or filtro in str(p.get("commenti", "")).lower()
-        ]
+            st.markdown(
+                f'<div class="dettaglio-riga"><strong>{etichette["campo_radio"]}:</strong> {radio_txt}</div>',
+                unsafe_allow_html=True,
+            )
+
+            if nomi_pers:
+                voci_li = "".join(f"<li>{nome}</li>" for nome in nomi_pers)
+                st.markdown(
+                    f'<div class="dettaglio-riga"><strong>{etichette["campo_personale"]}:</strong></div>'
+                    f'<ul class="dettaglio-lista">{voci_li}</ul>',
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    f'<div class="dettaglio-riga"><strong>{etichette["campo_personale"]}:</strong> -</div>',
+                    unsafe_allow_html=True,
+                )
+
+            st.markdown(
+                f'<div class="dettaglio-riga"><strong>{etichette["campo_commenti"]}:</strong> {commenti_txt}</div>',
+                unsafe_allow_html=True,
+            )
+
     else:
-        postazioni_filtrate = postazioni
+        st.title(etichette["titolo_home"])
+        st.caption(etichette["sottotitolo_home"])
 
-    postazioni_ordinate = sorted(postazioni_filtrate, key=chiave_ordinamento_postazione)
+        mappa_path = IMG_DIR / "mappa_generale.jpg"
 
-    st.subheader(f"{etichette['titolo_postazioni']} ({len(postazioni_ordinate)})")
+        with st.expander(etichette["expander_mappa"], expanded=False):
+            if mappa_path.exists():
+                mostra_immagine_espandibile(
+                    img_path=mappa_path,
+                    caption="Mappa generale Turin Marathon 2026",
+                    chiave_univoca="mappa_generale_home",
+                    width_compatta=280,
+                    is_mappa=True,
+                )
+            else:
+                st.warning("Inserisci il file `immagini/mappa_generale.jpg` nella cartella `immagini`.")
 
-    if not postazioni_ordinate:
-        st.info("Nessuna postazione presente. Accedi all'Area Riservata in alto a destra per inserirle.")
-    else:
-        for inizio in range(0, len(postazioni_ordinate), 3):
-            riga_postazioni = postazioni_ordinate[inizio : inizio + 3]
-            cols = st.columns(3)
-            for col_idx, p in enumerate(riga_postazioni):
-                idx = inizio + col_idx
-                with cols[col_idx]:
-                    with st.container(border=True):
-                        id_val = str(p.get("id", "")).strip()
-                        nome_val = str(p.get("nome", "")).strip()
-                        intestazione_card = (
-                            f"{id_val} — {nome_val}"
-                            if id_val and nome_val
-                            else (id_val or nome_val)
-                        )
-
-                        st.markdown(
-                            f'<div class="scheda-titolo">{intestazione_card}</div>',
-                            unsafe_allow_html=True,
-                        )
-
-                        imgs = estrai_immagini(p)
-                        if imgs:
-                            for img_idx, img_nome in enumerate(imgs):
-                                img_path = IMG_DIR / img_nome
-                                mostra_immagine_espandibile(
-                                    img_path=img_path,
-                                    caption=img_nome,
-                                    chiave_univoca=f"post_{idx}_{img_idx}_{img_nome}",
-                                    width_compatta=200,
-                                )
+        # --- SPAZIO LINK & IMMAGINI DELLA MANIFESTAZIONE ---
+        link_lista = risorse.get("link", [])
+        img_lista = risorse.get("immagini", [])
+        titolo_risorse_exp = f"{etichette['expander_risorse']} ({len(link_lista)} link · {len(img_lista)} immagini)"
+        with st.expander(titolo_risorse_exp, expanded=False):
+            if not link_lista and not img_lista:
+                st.info("Nessun link o immagine della manifestazione inserito. Puoi aggiungerli dall'Area Riservata.")
+            else:
+                if link_lista:
+                    st.markdown("**Link utili della manifestazione**")
+                    for item in link_lista:
+                        titolo_l = item.get("titolo") or item.get("url", "Link")
+                        url_l = url_sicuro(item.get("url", ""))
+                        nota_l = item.get("nota", "")
+                        if url_l:
+                            st.markdown(f"- [{titolo_l}]({url_l})" + (f" — {nota_l}" if nota_l else ""))
                         else:
-                            st.caption("Nessuna foto associata.")
+                            st.markdown(f"- **{titolo_l}**" + (f" — {nota_l}" if nota_l else ""))
 
-                        radio_txt = p.get("codice_radio") or "-"
-                        commenti_txt = p.get("commenti") or "-"
-                        nomi_pers = estrai_lista_personale(str(p.get("personale", "")))
+                if img_lista:
+                    st.markdown("**Immagini della manifestazione**")
+                    for inizio_r in range(0, len(img_lista), 3):
+                        riga_r = img_lista[inizio_r : inizio_r + 3]
+                        cols_r = st.columns(3)
+                        for col_r_idx, r_img in enumerate(riga_r):
+                            r_idx = inizio_r + col_r_idx
+                            with cols_r[col_r_idx]:
+                                with st.container(border=True):
+                                    nome_r = r_img.get("file", "")
+                                    titolo_r = r_img.get("titolo") or nome_r
+                                    mostra_immagine_espandibile(
+                                        img_path=IMG_DIR / nome_r,
+                                        caption=titolo_r,
+                                        chiave_univoca=f"risorsa_img_{r_idx}_{nome_r}",
+                                        width_compatta=200,
+                                    )
+                                    if r_img.get("fonte_url"):
+                                        st.caption(f"Fonte: {r_img['fonte_url']}")
 
-                        st.markdown(
-                            f'<div class="scheda-riga"><strong>{etichette["campo_radio"]}:</strong> {radio_txt}</div>',
-                            unsafe_allow_html=True,
-                        )
+        filtro = st.text_input(etichette["etichetta_ricerca"], "").strip().lower()
 
-                        if nomi_pers:
-                            voci_li = "".join(f"<li>{nome}</li>" for nome in nomi_pers)
+        if filtro:
+            postazioni_filtrate = [
+                p for p in postazioni
+                if filtro in str(p.get("id", "")).lower()
+                or filtro in str(p.get("nome", "")).lower()
+                or filtro in str(p.get("codice_radio", "")).lower()
+                or filtro in str(p.get("personale", "")).lower()
+                or filtro in str(p.get("commenti", "")).lower()
+            ]
+        else:
+            postazioni_filtrate = postazioni
+
+        postazioni_ordinate = sorted(postazioni_filtrate, key=chiave_ordinamento_postazione)
+
+        st.subheader(f"{etichette['titolo_postazioni']} ({len(postazioni_ordinate)})")
+
+        if not postazioni_ordinate:
+            st.info("Nessuna postazione presente. Accedi all'Area Riservata in alto a destra per inserirle.")
+        else:
+            for inizio in range(0, len(postazioni_ordinate), 3):
+                riga_postazioni = postazioni_ordinate[inizio : inizio + 3]
+                cols = st.columns(3)
+                for col_idx, p in enumerate(riga_postazioni):
+                    idx = inizio + col_idx
+                    with cols[col_idx]:
+                        with st.container(border=True):
+                            id_val = str(p.get("id", "")).strip()
+                            nome_val = str(p.get("nome", "")).strip()
+                            intestazione_card = (
+                                f"{id_val} — {nome_val}"
+                                if id_val and nome_val
+                                else (id_val or nome_val)
+                            )
+
                             st.markdown(
-                                f'<div class="scheda-riga"><strong>{etichette["campo_personale"]}:</strong></div>'
-                                f'<ul class="lista-personale">{voci_li}</ul>',
+                                f'<div class="scheda-titolo">{intestazione_card}</div>',
                                 unsafe_allow_html=True,
                             )
-                        else:
+
+                            if st.button(
+                                f"📋 Apri scheda {id_val or nome_val}",
+                                key=f"apri_post_{idx}_{id_val}_{nome_val}",
+                                use_container_width=True,
+                            ):
+                                st.session_state.postazione_selezionata = f"{id_val}||{nome_val}"
+                                st.rerun()
+
+                            imgs = estrai_immagini(p)
+                            if imgs:
+                                for img_idx, img_nome in enumerate(imgs):
+                                    img_path = IMG_DIR / img_nome
+                                    mostra_immagine_espandibile(
+                                        img_path=img_path,
+                                        caption=img_nome,
+                                        chiave_univoca=f"post_{idx}_{img_idx}_{img_nome}",
+                                        width_compatta=200,
+                                    )
+                            else:
+                                st.caption("Nessuna foto associata.")
+
+                            radio_txt = p.get("codice_radio") or "-"
+                            commenti_txt = p.get("commenti") or "-"
+                            nomi_pers = estrai_lista_personale(str(p.get("personale", "")))
+
                             st.markdown(
-                                f'<div class="scheda-riga"><strong>{etichette["campo_personale"]}:</strong> -</div>',
+                                f'<div class="scheda-riga"><strong>{etichette["campo_radio"]}:</strong> {radio_txt}</div>',
                                 unsafe_allow_html=True,
                             )
 
-                        st.markdown(
-                            f'<div class="scheda-riga"><strong>{etichette["campo_commenti"]}:</strong> {commenti_txt}</div>',
-                            unsafe_allow_html=True,
-                        )
+                            if nomi_pers:
+                                voci_li = "".join(f"<li>{nome}</li>" for nome in nomi_pers)
+                                st.markdown(
+                                    f'<div class="scheda-riga"><strong>{etichette["campo_personale"]}:</strong></div>'
+                                    f'<ul class="lista-personale">{voci_li}</ul>',
+                                    unsafe_allow_html=True,
+                                )
+                            else:
+                                st.markdown(
+                                    f'<div class="scheda-riga"><strong>{etichette["campo_personale"]}:</strong> -</div>',
+                                    unsafe_allow_html=True,
+                                )
+
+                            st.markdown(
+                                f'<div class="scheda-riga"><strong>{etichette["campo_commenti"]}:</strong> {commenti_txt}</div>',
+                                unsafe_allow_html=True,
+                            )
 
 # ==============================================================================
 # PAGINA 2: AREA RISERVATA
