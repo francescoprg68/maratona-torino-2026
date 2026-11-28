@@ -1,18 +1,29 @@
+import base64
 import hmac
 import json
 from pathlib import Path
 import re
 import urllib.parse
 import urllib.request
+import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
+
+try:
+    from docx import Document as DocxDocument
+except ImportError:
+    DocxDocument = None
 
 BASE_DIR = Path(__file__).resolve().parent
 IMG_DIR = BASE_DIR / "immagini"
+PRIV_DOC_DIR = BASE_DIR / "documenti_privati"
 DATA_FILE = BASE_DIR / "postazioni.json"
 RISORSE_FILE = BASE_DIR / "risorse_manifestazione.json"
+PRIV_DOCUMENTI_FILE = BASE_DIR / "documenti_privati.json"
 ETICHETTE_FILE = BASE_DIR / "etichette.json"
 
 IMG_DIR.mkdir(exist_ok=True)
+PRIV_DOC_DIR.mkdir(exist_ok=True)
 
 
 def get_password_area_riservata() -> str:
@@ -53,7 +64,6 @@ ETICHETTE_DEFAULT = {
     "campo_radio": "Codice radio",
     "campo_personale": "Personale assegnato",
     "campo_commenti": "Commenti",
-    # --- STILI SALVATI IN JSON ---
     "stile_titolo_font": "Predefinito (Sistema)",
     "stile_titolo_size": 32,
     "stile_titolo_colore": "#111827",
@@ -124,6 +134,21 @@ def carica_risorse() -> dict:
 def salva_risorse(dati: dict) -> None:
     with RISORSE_FILE.open("w", encoding="utf-8") as f:
         json.dump(dati, f, indent=2, ensure_ascii=False)
+
+
+def carica_documenti_privati() -> list[dict]:
+    if not PRIV_DOCUMENTI_FILE.exists():
+        return []
+    with PRIV_DOCUMENTI_FILE.open("r", encoding="utf-8") as f:
+        dati = json.load(f)
+    if not isinstance(dati, list):
+        return []
+    return dati
+
+
+def salva_documenti_privati(lista: list[dict]) -> None:
+    with PRIV_DOCUMENTI_FILE.open("w", encoding="utf-8") as f:
+        json.dump(lista, f, indent=2, ensure_ascii=False)
 
 
 def carica_etichette() -> dict:
@@ -202,11 +227,128 @@ def estrai_immagini(postazione: dict) -> list[str]:
     return risultato
 
 
-def salva_file_upload(uploaded_file) -> str:
+def salva_file_upload(uploaded_file, cartella: Path = IMG_DIR) -> str:
     nome_pulito = Path(uploaded_file.name).name
-    destinazione = IMG_DIR / nome_pulito
+    destinazione = cartella / nome_pulito
     destinazione.write_bytes(uploaded_file.getbuffer())
     return nome_pulito
+
+
+def estrai_testo_docx(percorso: Path) -> str:
+    if DocxDocument is None:
+        return "Per leggere i file Word (.docx) a schermo installa il pacchetto python-docx (`pip install python-docx`)."
+    doc = DocxDocument(str(percorso))
+    righe: list[str] = []
+    for p in doc.paragraphs:
+        if p.text.strip():
+            righe.append(p.text.strip())
+    for tabella in doc.tables:
+        for riga in tabella.rows:
+            celle = [c.text.strip() for c in riga.cells if c.text.strip()]
+            if celle:
+                righe.append(" | ".join(celle))
+    return "\n\n".join(righe) if righe else "Il documento Word non contiene testo leggibile."
+
+
+def mostra_pdf_a_schermo(percorso: Path, idx: int):
+    """Mostra il PDF a schermo tramite pdf.js senza installare pacchetti sulla chiavetta."""
+    b64_pdf = base64.b64encode(percorso.read_bytes()).decode("utf-8")
+    html_viewer = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8" />
+      <style>
+        body {{ margin: 0; background: #e5eef5; font-family: Arial, sans-serif; text-align: center; }}
+        #pdf-container {{ padding: 10px; }}
+        canvas.pdf-page {{
+          display: block;
+          margin: 12px auto;
+          max-width: 100%;
+          height: auto !important;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+          background: #fff;
+        }}
+        #stato-pdf {{ padding: 14px; color: #111827; font-size: 14px; }}
+      </style>
+    </head>
+    <body>
+      <div id="stato-pdf">Caricamento anteprima PDF...</div>
+      <div id="pdf-container"></div>
+      <script type="module">
+        import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
+
+        const raw = atob("{b64_pdf}");
+        const bytes = new Uint8Array(raw.length);
+        for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+
+        const stato = document.getElementById("stato-pdf");
+        const container = document.getElementById("pdf-container");
+
+        try {{
+          const pdf = await pdfjsLib.getDocument({{ data: bytes }}).promise;
+          stato.textContent = "Pagine PDF: " + pdf.numPages;
+          for (let p = 1; p <= pdf.numPages; p++) {{
+            const page = await pdf.getPage(p);
+            const viewport = page.getViewport({{ scale: 1.4 }});
+            const canvas = document.createElement("canvas");
+            canvas.className = "pdf-page";
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            container.appendChild(canvas);
+            await page.render({{ canvasContext: canvas.getContext("2d"), viewport }}).promise;
+          }}
+        }} catch (err) {{
+          stato.textContent = "Anteprima PDF non disponibile (verifica la connessione o usa un'immagine JPG/PNG del documento).";
+        }}
+      </script>
+    </body>
+    </html>
+    """
+    components.html(html_viewer, height=740, scrolling=True)
+
+
+def render_documento_privato(doc_info: dict, idx: int):
+    nome_file = doc_info.get("file", "")
+    percorso = PRIV_DOC_DIR / nome_file
+
+    if not nome_file or not percorso.exists():
+        st.warning(f"File non trovato: `{nome_file}`")
+        return
+
+    est = percorso.suffix.lower()
+
+    if est == ".pdf":
+        mostra_pdf_a_schermo(percorso, idx=idx)
+
+    elif est in (".xlsx", ".xls", ".csv"):
+        try:
+            if est == ".csv":
+                df = pd.read_csv(percorso)
+            else:
+                xl = pd.ExcelFile(percorso)
+                fogli = xl.sheet_names
+                foglio_scelto = (
+                    st.selectbox(
+                        "Seleziona foglio",
+                        fogli,
+                        key=f"sheet_priv_{idx}_{nome_file}",
+                    )
+                    if len(fogli) > 1
+                    else fogli[0]
+                )
+                df = pd.read_excel(percorso, sheet_name=foglio_scelto)
+            st.dataframe(df, use_container_width=True, hide_index=True)
+        except Exception as exc:
+            st.error(f"Impossibile leggere il foglio: {exc}")
+
+    elif est == ".docx":
+        testo_doc = estrai_testo_docx(percorso)
+        st.markdown(testo_doc.replace("\n\n", "<br><br>"), unsafe_allow_html=True)
+
+    else:
+        st.info("Formato non supportato per la visualizzazione a schermo.")
 
 
 def estrai_lista_personale(testo_personale: str) -> list[str]:
@@ -327,6 +469,7 @@ def apri_dialog_login():
 
 postazioni = carica_postazioni()
 risorse = carica_risorse()
+documenti_privati = carica_documenti_privati()
 etichette = carica_etichette()
 
 # --- COSTRUZIONE VARIABILI CSS DAI PARAMETRI SALVATI ---
@@ -859,6 +1002,7 @@ elif st.session_state.pagina == "gestione" and st.session_state.autenticato:
             "✏️ Modifica una postazione esistente",
             "🗑️ Elimina una postazione",
             "🗺️ Aggiorna Mappa Generale del Percorso",
+            "🔐 Documenti Privati (PDF, Excel, Word)",
             "🔗 Gestisci Link & Immagini Manifestazione",
             "🏷️ Personalizza Titoli & Etichette",
         ],
@@ -904,7 +1048,7 @@ elif st.session_state.pagina == "gestione" and st.session_state.autenticato:
                                 lista_img.append(parte.strip())
                     if foto_caricate:
                         for f_up in foto_caricate:
-                            salv = salva_file_upload(f_up)
+                            salv = salva_file_upload(f_up, IMG_DIR)
                             if salv not in lista_img:
                                 lista_img.append(salv)
 
@@ -1000,7 +1144,7 @@ elif st.session_state.pagina == "gestione" and st.session_state.autenticato:
 
                     if nuove_foto_mod:
                         for f_up in nuove_foto_mod:
-                            salv = salva_file_upload(f_up)
+                            salv = salva_file_upload(f_up, IMG_DIR)
                             if salv not in imgs_da_rimuovere and salv not in lista_finale:
                                 lista_finale.append(salv)
 
@@ -1056,7 +1200,63 @@ elif st.session_state.pagina == "gestione" and st.session_state.autenticato:
                 st.success("Mappa generale aggiornata!")
                 st.rerun()
 
-    # --- OPZIONE 5: LINK & IMMAGINI DELLA MANIFESTAZIONE ---
+    # --- OPZIONE 5: DOCUMENTI PRIVATI (SOLO AREA RISERVATA) ---
+    elif azione == "🔐 Documenti Privati (PDF, Excel, Word)":
+        st.subheader("Documenti Privati (visibili solo a te)")
+        if DocxDocument is None:
+            st.caption("Suggerimento: per visualizzare anche il testo dei file Word (.docx) a schermo, installa `python-docx`.")
+
+        with st.form("form_aggiungi_doc_privato", clear_on_submit=True):
+            dp_titolo = st.text_input("Titolo documento privato (es. Turni Interni / Numeri Emergenza)")
+            dp_nota = st.text_input("Nota personale (opzionale)")
+            dp_file = st.file_uploader(
+                "Carica documento privato (PDF, Excel .xlsx/.csv o Word .docx)",
+                type=["pdf", "xlsx", "xls", "csv", "docx"],
+            )
+            btn_add_priv = st.form_submit_button("Salva documento privato", type="primary", use_container_width=True)
+
+            if btn_add_priv:
+                if dp_file is None:
+                    st.error("Seleziona un file PDF, Excel o Word da caricare.")
+                else:
+                    nome_p = salva_file_upload(dp_file, PRIV_DOC_DIR)
+                    documenti_privati.append({
+                        "titolo": dp_titolo.strip() or nome_p,
+                        "file": nome_p,
+                        "nota": dp_nota.strip(),
+                    })
+                    salva_documenti_privati(documenti_privati)
+                    st.success(f"Documento privato '{nome_p}' salvato!")
+                    st.rerun()
+
+        if documenti_privati:
+            st.divider()
+            st.markdown("**Consulta o elimina un documento privato**")
+            opzioni_priv = [
+                f"{i} — {d.get('titolo', d.get('file', 'Documento'))}"
+                for i, d in enumerate(documenti_privati)
+            ]
+            scelta_priv = st.selectbox("Seleziona documento da visualizzare", opzioni_priv, key="sel_doc_priv")
+            idx_priv = int(scelta_priv.split(" — ", 1)[0])
+            doc_priv_sel = documenti_privati[idx_priv]
+
+            with st.container(border=True):
+                st.markdown(
+                    f'<div class="dettaglio-titolo">{doc_priv_sel.get("titolo", "Documento")}</div>',
+                    unsafe_allow_html=True,
+                )
+                if doc_priv_sel.get("nota"):
+                    st.caption(doc_priv_sel["nota"])
+                render_documento_privato(doc_priv_sel, idx=idx_priv)
+
+            if st.button("🗑️ Elimina questo documento privato", key=f"del_priv_{idx_priv}"):
+                documenti_privati.pop(idx_priv)
+                salva_documenti_privati(documenti_privati)
+                st.rerun()
+        else:
+            st.info("Nessun documento privato salvato al momento.")
+
+    # --- OPZIONE 6: LINK & IMMAGINI DELLA MANIFESTAZIONE ---
     elif azione == "🔗 Gestisci Link & Immagini Manifestazione":
         st.subheader("Link & Immagini della Manifestazione")
 
@@ -1095,7 +1295,7 @@ elif st.session_state.pagina == "gestione" and st.session_state.autenticato:
                 fonte_txt = ""
                 try:
                     if r_file_img is not None:
-                        nome_salv = salva_file_upload(r_file_img)
+                        nome_salv = salva_file_upload(r_file_img, IMG_DIR)
                     elif r_url_img.strip():
                         fonte_txt = url_sicuro(r_url_img)
                         if not fonte_txt:
@@ -1137,7 +1337,7 @@ elif st.session_state.pagina == "gestione" and st.session_state.autenticato:
                         salva_risorse(risorse)
                         st.rerun()
 
-    # --- OPZIONE 6: PERSONALIZZA TITOLI, ETICHETTE & STILI ---
+    # --- OPZIONE 7: PERSONALIZZA TITOLI, ETICHETTE & STILI ---
     elif azione == "🏷️ Personalizza Titoli & Etichette":
         st.subheader("Personalizza Titoli, Etichette & Caratteri")
         nomi_font = list(FONT_OPZIONI.keys())
